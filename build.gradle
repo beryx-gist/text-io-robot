@@ -2,18 +2,12 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id 'java'
-    
     id 'application'
     id 'eclipse'
     id 'idea'
-    
     id "com.github.ethankhall.semantic-versioning" version "1.1.0"
     id "com.github.ben-manes.versions" version "0.13.0"
-    
-    
     id "com.github.hierynomus.license" version "0.12.1"
-    id 'com.github.jk1.dependency-license-report' version '0.3.8'
-    
 }
 
 project.version.with {
@@ -29,8 +23,6 @@ ext.textIoRobotVersion = project.version as String
 ext.textIoRobotTag = Boolean.valueOf(textIoRobotReleaseBuild) ? "v$ext.textIoRobotVersion" : 'master'
 
 
-
-
 group = 'org.beryx'
 version = textIoRobotVersion
 
@@ -38,15 +30,8 @@ tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:all,-syntax,-missing', '-quiet')
 }
 
-
-
-
-
-
 repositories {
     jcenter()
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
 }
 
 sourceCompatibility = 1.8
@@ -54,93 +39,25 @@ sourceCompatibility = 1.8
 def defaultEncoding = 'UTF-8'
 [compileJava, compileTestJava]*.options*.encoding = defaultEncoding
 
-configurations {
-    provided
-    compile {transitive = true}
-}
-
 license {
     header rootProject.file("license-header.txt")
     skipExistingHeaders true
     ignoreFailures false
 }
 
-
 dependencies {
-    
+    compile 'org.beryx:text-io:3.3.0'
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
     runtime ('ch.qos.logback:logback-classic:1.1.7')
-    
-    testCompile 'junit:junit:4.12'
-    testCompile('ch.qos.logback:logback-classic:1.1.7')
-    
 }
-
-sourceSets.main.compileClasspath += configurations.provided
 
 jar {
     manifest {
         attributes 'Implementation-Title': "${project.archivesBaseName}",
                 'Implementation-Version': textIoRobotVersion
     }
-
-    from ("${projectDir}/src/main/java") {
-        include('**/*.fxml')
-        include('**/*.css')
-        include('**/*.png')
-    }
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: classes) {
-    classifier "javadoc"
-    from javadoc
-}
-artifacts {
-    (System.getenv("TRAVIS") == "true") ? archives(sourcesJar) : archives(sourcesJar, javadocJar)
-}
-
-task "create-dirs" {
-    doLast {
-        sourceSets*.java.srcDirs*.each { it.mkdirs() }
-        
-        sourceSets*.resources.srcDirs*.each { it.mkdirs() }
-    }
-}
-
-eclipse {
-    classpath {
-        file {
-            whenMerged {
-                def jre = entries.find { it.path.contains 'org.eclipse.jdt.launching.JRE_CONTAINER' }
-                jre.accessRules.add(new org.gradle.plugins.ide.eclipse.model.AccessRule('0', 'javafx/**'))
-            }
-        }
-        plusConfigurations << configurations.provided
-    }
-    project {
-        file.beforeMerged { project ->
-            project.natures.clear()
-        }
-    }
-}
-
-idea {
-    module {
-        scopes.PROVIDED.plus += [configurations.provided]
-    }
-}
- 
-
-
-
-artifacts {
-    (System.getenv("TRAVIS") == "true") ? archives(sourcesJar) : archives(sourcesJar, javadocJar)
-}
 jar {
     manifest {
         attributes 'Main-Class': 'org.beryx.textio.robot.RobotDemo'
@@ -161,21 +78,3 @@ applicationDistribution.from("${rootProject.projectDir}/dist") {
 applicationDistribution.from("${rootProject.projectDir}/..") {
     include('LICENSE', 'NOTICE')
 }
-
-
-
-configureJavadoc(javadoc)
-
-def configureJavadoc(task) {
-    configure(task) {
-        title "text-io-robot Documentation ($textIoRobotVersion)"
-        destinationDir file("build/docs/javadoc")
-        if(project.configurations.hasProperty('provided')) {
-            classpath += project.configurations.provided
-        }
-        configure(options) {
-            links "http://docs.oracle.com/javase/8/docs/api/"
-        }
-    }
-}
-

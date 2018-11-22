@@ -15,8 +15,32 @@
  */
 package org.beryx.textio.robot;
 
+import org.beryx.textio.TextIO;
+import org.beryx.textio.TextIoFactory;
+import org.beryx.textio.TextTerminal;
+
 public class RobotDemo {
     public static void main(String[] args) {
-        System.out.println("Hello from RobotDemo!");
+        TextIO textIO = TextIoFactory.getTextIO();
+        TextTerminal<?> textTerm = textIO.getTextTerminal();
+        textTerm.init();
+
+        RoboTypist typist = new RoboTypist();
+
+        typist.type("John");
+        String name = textIO.newStringInputReader().read("Name");
+
+        typist.type("21");
+        int age = textIO.newIntInputReader().read("Age");
+
+        typist.type("student");
+        String occupation = textIO.newStringInputReader().read("Occupation");
+
+
+        textTerm.printf("\nHello, %s! I just found out that you are a %d years old %s.\n", name, age, occupation);
+
+
+        textIO.newStringInputReader().withMinLength(0).read("Press enter to terminate...");
+        textIO.dispose();
     }
 }
